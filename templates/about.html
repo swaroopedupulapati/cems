@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CEMS-About page</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+            background: url("../static/logo.png");
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto; 
+
+        }
+        .container {
+            /* background: #121212; */
+            background-color: #195ba1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            width: 50%;
+            text-align: center;
+        }
+        h1 {
+            color: black;
+        }
+        p {
+            color: #CCCCCC;
+            text-align: justify;
+        }
+        strong {
+            color: #FFD700;
+        }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        select {
+            background: #333;
+            color: #FFFFFF;
+        }
+        button {
+            /* background: #D72638; */
+            background: #1A1A2E;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            /* background: #A30000; */
+            background: #13134b;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Crime Evidence Management System</h1>
+        <p>
+            The Crime Evidence Management System is a cutting-edge digital solution designed to simplify and secure the handling of crime-related evidence. Whether you're part of a law enforcement agency, forensic team, or legal institution, this app ensures efficient evidence tracking, secure storage, and seamless case management.
+            <br><br>
+            <strong>Why Choose This App?</strong>
+            <br>
+            - Secure & Tamper-Proof: Ensures evidence integrity with encryption and access control.
+            <br>
+            - Real-Time Tracking: Monitor the status and location of evidence at any time.
+            <br>
+            - Seamless Case Management: Organize case files, upload images, videos, and documents.
+            <br>
+            - User-Friendly Interface: Easy-to-use design for quick access and management.
+            <br>
+            - Automated Logs & Reports: Maintain a complete audit trail for legal and investigative purposes.
+            <br><br>
+            Our mission is to enhance transparency, accuracy, and efficiency in crime investigations by leveraging technology. With this app, managing evidence is simpler, faster, and more secure than ever before.
+            <br><br>
+            Get Started Today and Take Crime Investigation to the Next Level!
+        </p>
+        <form action="/" method="post">
+            <select name="login" required>
+                    <option value="" disabled selected>Select role to login</option>
+                    <option value="hlogin">Higher-login</option>
+                    <option value="llogin"><a href="/llogin"></a>Lower-login</option>
+            </select>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</body>
+</html>

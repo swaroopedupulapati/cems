@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS-Add case</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow-y: auto; 
+        }
+        .add {
+                /* background: #121212; */
+                background-color: #195ba1;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+                text-align: center;
+                width: 90vh;/* Enables scrolling inside form */
+        }
+        h1 {
+            /* color: #D72638; */
+            color: black;
+            text-align: center;
+        }
+        h4 {
+                color: #FFD700;
+            }
+        label {
+            float: left;
+            font-weight: bold;
+            color:white;
+        }
+        input[type="text"], input[type="file"] {
+            width: 98%;
+            padding: 8px;
+            margin: 5px 0 10px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 1rem;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            /* background: #D72638; */
+            background: #1A1A2E;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            /* background: #A30000; */
+            background: #13134b;
+            transform: scale(1.02);
+        }
+        .detail {
+            background: #222;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .file-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .file-preview img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        function addDetail() {
+            const container = document.getElementById('detailsContainer');
+            const detailDiv = document.createElement('div');
+            detailDiv.classList.add('detail');
+            detailDiv.innerHTML = `
+                <div class="label">
+                    <label>Label:</label>
+                    <input type="text" name="label[]" required>
+                </div>
+                <div class="label">
+                    <label>Data (Text):</label>
+                    <input type="text" name="data_text[]">
+                </div>
+                <div class="label">
+                    <label>Data (File):</label>
+                    <input type="file" name="data_file[]" onchange="previewFile(this)">
+                </div>
+                <div class="file-preview" style="display:none;"></div>
+                <button type="button" class="remove-btn" onclick="removeDetail(this)">Remove</button>
+            `;
+            container.appendChild(detailDiv);
+        }
+
+        function removeDetail(button) {
+            const detailDiv = button.parentElement;
+            detailDiv.remove();
+        }
+
+        function previewFile(input) {
+            const file = input.files[0];
+            const previewContainer = input.parentElement.nextElementSibling;
+            previewContainer.style.display = 'block';
+
+            if (file) {
+                const reader = new FileReader();
+
+                if (file.type.startsWith('image/')) {
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `<img src="${e.target.result}" alt="Image Preview" style="max-width: 100%;">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'text/plain' || file.type === 'text/csv') {
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `<pre>${e.target.result}</pre>`;
+                    };
+                    reader.readAsText(file);
+                } else if (file.type === 'application/pdf') {
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `<embed src="${e.target.result}" type="application/pdf" width="100%" height="200px">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.innerHTML = `
+                        <p>File Name: ${file.name}</p>
+                        <p>File Size: ${(file.size / 1024).toFixed(2)} KB</p>
+                        <p>Preview not available for this file type.</p>
+                    `;
+                }
+            } else {
+                previewContainer.style.display = 'none';
+                previewContainer.innerHTML = '';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="add">
+        <h1>Enter Case Details</h1>
+        <h4 style="text-align:center">{{msg}}</h4>
+
+        <form method="POST" action="/add_case" enctype="multipart/form-data">
+            <label for="case_number">Case Number:</label>
+            <input type="text" id="case_number" name="case_number" required><br><br>
+
+            <div id="detailsContainer">
+                <div class="detail">
+                    <div class="label">
+                        <label>Label:</label>
+                        <input type="text" name="label[]" required>
+                    </div>
+                    <div class="label">
+                        <label>Data (Text):</label>
+                        <input type="text" name="data_text[]">
+                    </div>
+                    <div class="label">
+                        <label>Data (File):</label>
+                        <input type="file" name="data_file[]" onchange="previewFile(this)">
+                    </div>
+                    <div class="file-preview" style="display:none;"></div>
+                </div>
+            </div>
+
+            <button type="button" onclick="addDetail()">Add Detail</button><br><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

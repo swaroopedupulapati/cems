@@ -1,0 +1,104 @@
+<html>
+    <head>
+        <title>CEMS-Lower Home</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+            color: #FFFFFF; /* White Text */
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            color:black; /* Blood Red */
+        }
+
+        button {
+            width:350px;
+            
+            /* background-color: #D72638; Metallic Gray Background */
+            background-color: #195ba1;
+
+            color: #FFFFFF; /* White Text */
+            border: 2px solid #D72638; /* Blood Red Border */
+             border-radius: 10px;
+            padding: 40px 40px 30px 40px; /*Increased padding */
+            
+            font-size: 1.6em; /* Larger font size */
+            margin: 15px; /* More spacing between buttons */
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        button:hover {
+            /* background-color: #A30000; Blood Red Hover */
+            background-color: #044e9c;
+
+            color: #1A1A2E; /* Dark Blue Text */
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(1);
+        }
+        img{
+            height: 150px;
+            width: 250px;
+            /* background-color:transparent; */
+            padding-bottom: 20px;
+        }
+        .text{
+            border-top:5px solid black;
+            padding-top: 10px;
+        }
+        .title{
+            float: left;
+            width: 100%;
+        }
+        .title_img{
+            width: 20%;
+            float: left;
+        }
+        .title_text{
+            float: left;
+            padding-left: 0%;
+            margin-left: 15%;
+        }
+        
+    </style>
+    </head>
+    <body>
+        <div class="title">
+            <div class="title_img"><img src="../static/logo.png"></div>
+            <div class="title_text"><h1>Lower Home</h1></div><br>
+        </div>
+        <button onclick="window.location.href='/viewlopro'">
+            <img src="../static/profile.png"><br>
+            <div class="text">View Profile</div>
+        </button>
+        <button onclick="window.location.href='/view'">
+            <img src="../static/view_case.png"><br>
+            <div class="text">View Case</div>
+        </button>
+        <button onclick="window.location.href='/add_case'">
+            <img src="../static/add_case.png"><br>
+            <div class="text">Add New Case</div>
+        </button>
+        <button onclick="window.location.href='/regloo'">
+            <img src="../static/add_lower.png"><br>
+            <div class="text">Register Lower Official</div>
+        </button>
+        <button onclick="window.location.href='/loo_changepasss'">
+            <img src="../static/change_password.png"><br>
+            <div class="text">Change Password</div>
+        </button>
+    </body>
+</html>

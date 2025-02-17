@@ -1,0 +1,126 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS-Higher Home</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+            color: #FFFFFF; /* White Text */
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            color:black; /* Blood Red */
+        }
+
+        button {
+            width:350px;
+            
+            /* background-color: #D72638; Metallic Gray Background */
+            background-color: #195ba1;
+
+            color: #FFFFFF; /* White Text */
+            border: 2px solid #D72638; /* Blood Red Border */
+             border-radius: 10px;
+            padding: 40px 40px 30px 40px; /*Increased padding */
+            
+            font-size: 1.6em; /* Larger font size */
+            margin: 15px; /* More spacing between buttons */
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        button:hover {
+            /* background-color: #A30000; Blood Red Hover */
+            background-color: #044e9c;
+
+            color: #1A1A2E; /* Dark Blue Text */
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(1);
+        }
+        img{
+            height: 150px;
+            width: 250px;
+            /* background-color:transparent; */
+            padding-bottom: 20px;
+        }
+        .text{
+            border-top:5px solid black;
+            padding-top: 10px;
+        }
+        .title{
+            float: left;
+            width: 100%;
+        }
+        .title_img{
+            width: 20%;
+            float: left;
+        }
+        .title_text{
+            float: left;
+            padding-left: 0%;
+            margin-left: 15%;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="title">
+        <div class="title_img"><img src="../static/logo.png"></div>
+        <div class="title_text"><h1>Higher Home</h1></div><br>
+    </div>
+    <button onclick="window.location.href='/viewhipro'">
+        <img src="../static/profile.png"><br>
+        <div class="text">View Profile</div>
+    </button>
+    <button onclick="window.location.href='/view'">
+        <img src="../static/view_case.png"><br>
+        <div class="text">View Case</div>
+    </button>
+    <button onclick="window.location.href='/add_case'">
+        <img src="../static/add_case.png"><br>
+        <div class="text">Add New Case</div>
+    </button>
+    <button onclick="window.location.href='/edit_case'">
+        <img src="../static/edit_case.png"><br>
+        <div class="text">Edit Case</div>
+    </button>
+    <button onclick="window.location.href='/removecase'">
+        <img src="../static/remove_case.png"><br>
+        <div class="text">Remove Case</div>
+    </button>
+    <button onclick="window.location.href='/reghio'">
+        <img src="../static/add_higher.png"><br>
+        <div class="text">Register Higher Official</div>
+    </button>
+    <button onclick="window.location.href='/regloo'">
+        <img src="../static/add_lower.png"><br>
+        <div class="text">Register Lower Official</div>
+    </button>
+    <button onclick="window.location.href='/remhio'">
+        <img src="../static/remove_higher.png"><br>
+        <div class="text">Remove Higher Official</div>
+    </button>
+    <button onclick="window.location.href='/remloo'">
+        <img src="../static/remove_lower.png"><br>
+        <div class="text">Remove Lower Official</div>
+    </button>
+    <button onclick="window.location.href='/hio_changepasss'">
+        <img src="../static/change_password.png"><br>
+        <div class="text">Change Password</div>
+    </button>
+</body>
+</html>

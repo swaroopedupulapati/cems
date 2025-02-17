@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS-View Case</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .details{
+            /* background: #121212; */
+            background-color: #195ba1; 
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+            width: 90vh;/* Enables scrolling inside form */
+        
+        }
+        h1, h2 {
+            color: #FFD700;
+            text-align: center;
+        }
+        /* form {
+            background: #121212;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            width: 400px;
+            text-align: center;
+            margin-bottom: 20px;
+        } */
+        label {
+            font-weight: bold;
+            color: #FFD700;
+        }
+        input[type="text"] {
+            width: 96%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #FFFFFF;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            /* background: #D72638; */
+            background: #1A1A2E;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            /* background: #A30000; */
+            background: #13134b;
+            transform: scale(1.05);
+        }
+        .case-container {
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            width: 500px;
+            margin-top: 20px;
+        }
+        .detail {
+            background: #333;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .label ,h4{
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .data {
+            margin-top: 5px;
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+        iframe {
+            width: 100%;
+            height: 300px;
+            border-radius: 5px;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .flash-messages {
+            list-style: none;
+            padding: 0;
+        }
+        .flash-messages li {
+            color: red;
+            font-weight: bold;
+            background: #2A0000;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .file-link {
+            width: 100%;
+            display: block;
+            text-align: center;
+            font-size: 18px;
+            /* background: #FFD700; */
+            background: #1A1A2E;
+            color: #000;
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .file-link:hover {
+            /* background: #A30000; */
+            background: #13134b;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="details">
+        <h1>View Case Details</h1>
+        <h4>{{msg}}</h4>
+        <form method="POST" action="/view">
+            <label for="case_number">Enter Case Number:</label>
+            <input type="text" id="case_number" name="case_number" required>
+            <button type="submit">Search</button>
+        </form><br><br>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li style="color: red;">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+
+        {% if case_data %}
+        <h2>Case Number: {{ case_data.case_number }}</h2>
+        <div>
+            {% for item in file_contents %}
+            <div class="detail">
+                <div class="label">{{ item.detail.label }}</div>
+                <div class="data">{{ item.detail.data }}</div>
+
+                {% if item.file %}
+                    {% if item.file.type == 'text' %}
+                    <pre class="data">{{ item.file.content }}</pre>
+                    {% elif item.file.type == 'pdf' %}
+                    <iframe src="data:application/pdf;base64,{{ item.file.content }}"></iframe>
+                    {% elif item.file.type == 'image' %}
+                    <img src="{{ item.file.content }}" alt="Image">
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div style="margin-top: 20px;">
+        <button onclick="window.location.href='/download_pdf/{{ case_data.case_number }}'" class="file-link" style="font-size: 18px;">Download Case Details as PDF</button>
+    </div>
+    {% endif %}
+    
+</body>
+</html>

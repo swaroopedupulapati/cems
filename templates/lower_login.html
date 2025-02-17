@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS-Lower Login</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .main_div {
+            /* background: #121212; */
+            background-color: #195ba1;            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+        }
+        h1 {
+            /* color: #D72638; */
+            color: black;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        h3 {
+            float: left;
+            font-size: 1.2rem;
+            margin: 10px 0 5px 10px;
+            color: #FFFFFF;
+        }
+        h4 {
+            color: #FFA500;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        .input-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        input {
+            width: 85%;
+            padding: 10px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 1rem;
+            padding-right: 40px; /* Space for eye icon */
+        }
+        .toggle-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #FFD700;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            /* background: #D72638; */
+            background: #1A1A2E;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            /* background: #A30000; */
+            background: #13134b;
+            transform: scale(1.05);
+
+        }
+    </style>
+</head>
+<body>
+    <div class="main_div">  
+        <div class="lower_official">
+            <h1>Lower Official Login</h1>
+            <h4>{{msg}}</h4>
+            <form action="/lower_login" method="post">
+                <h3>ID</h3><br>
+                <div class="input-container">
+                    <input type="text" name="id" placeholder="Enter ID" required />
+                </div>
+
+                <h3>Password</h3><br>
+                <div class="input-container">
+                    <input type="password" id="password" name="password" placeholder="Enter Password" required />
+                    <span class="toggle-icon" onclick="togglePassword()">🙈</span>
+                </div>
+                
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            let passwordInput = document.getElementById("password");
+            let icon = document.querySelector(".toggle-icon");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.textContent = "🙉"; // Change to ear-covered emoji
+            } else {
+                passwordInput.type = "password";
+                icon.textContent = "🙈"; // Change back to eye-covered emoji
+            }
+        }
+    </script>
+</body>
+</html>

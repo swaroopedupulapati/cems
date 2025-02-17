@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS-Modify case</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <style>
+        body {
+            /* background-color: #1A1A2E; */
+            background-color: white;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow-y: auto; 
+        }
+        .edit{
+                /* background: #121212; */
+                background-color: #195ba1;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+                text-align: center;
+                width: 90vh;/* Enables scrolling inside form */
+        
+        }
+        h1 {
+            /* color: #D72638; */
+            color: black;
+            text-align: center;
+        }
+        h4 {
+                color: #FFD700;
+            }
+        label {
+            float: left;
+            font-weight: bold;
+            color: white;
+        }
+        input[type="text"] {
+            width: 98%;
+            padding: 10px;
+            margin: 5px 0 10px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #FFFFFF;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            /* background: #D72638; */
+            background: #1A1A2E;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            /* background: #A30000; */
+            background: #13134b;
+            transform: scale(1.02);
+        }
+        .detail {
+            background: #222;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        function fetchCaseDetails() {
+            const caseNumber = document.getElementById('case_number').value;
+            if (!caseNumber) {
+                alert('Please enter a case number!');
+                return;
+            }
+
+            fetch(`/fetch_case_details/${caseNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    const container = document.getElementById('detailsContainer');
+                    container.innerHTML = ''; // Clear current details
+
+                    data.details.forEach(detail => {
+                        const detailDiv = document.createElement('div');
+                        detailDiv.classList.add('detail');
+                        let filePreview = '';
+
+                        if (detail.filename) {
+                            const fileExtension = detail.filename.split('.').pop().toLowerCase();
+
+                            if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+                                filePreview = `<img src="/downloadd_files/${detail.file_id}" alt="Image Preview" style="max-width: 100%;">`;
+                            } else if (['pdf'].includes(fileExtension)) {
+                                filePreview = `
+                                    <iframe 
+                                        src="/downloadd_files/${detail.file_id}" 
+                                        type="application/pdf" 
+                                        width="100%" 
+                                        height="400px" 
+                                        style="border: none;">
+                                    </iframe>`;
+                            } else if (['mp4', 'webm'].includes(fileExtension)) {
+                                filePreview = `<video controls width="100%">
+                                    <source src="/downloadd_files/${detail.file_id}" type="video/${fileExtension}">
+                                    Your browser does not support the video tag.
+                                </video>`;
+                            } else if (['mp3', 'wav'].includes(fileExtension)) {
+                                filePreview = `<audio controls>
+                                    <source src="/downloadd_files/${detail.file_id}" type="audio/${fileExtension}">
+                                    Your browser does not support the audio element.
+                                </audio>`;
+                            } else {
+                                filePreview = `<a href="/downloadd_files/${detail.file_id}" target="_blank">Download ${detail.filename}</a>`;
+                            }
+                        }
+
+                        detailDiv.innerHTML = `
+                            <div>
+                                <label>Label:</label>
+                                <input type="text" name="label[]" value="${detail.label}" required>
+                            </div>
+                            <div>
+                                <label>Data (Text):</label>
+                                <input type="text" name="data_text[]" value="${detail.data || ''}">
+                            </div>
+                            <div>
+                                <label>Data (File):</label>
+                                <input type="file" name="data_file[]" onchange="previewFile(this)">
+                                <div class="file-preview">${filePreview}</div>
+                            </div>
+                            <button type="button" onclick="this.parentElement.remove()">Remove</button>
+                        `;
+                        container.appendChild(detailDiv);
+                    });
+                })
+                .catch(err => console.error(err));
+        }
+
+        function addDetail() {
+            const container = document.getElementById('detailsContainer');
+            const detailDiv = document.createElement('div');
+            detailDiv.classList.add('detail');
+            detailDiv.innerHTML = `
+                <div>
+                    <label>Label:</label>
+                    <input type="text" name="label[]" required>
+                </div>
+                <div>
+                    <label>Data (Text):</label>
+                    <input type="text" name="data_text[]">
+                </div>
+                <div>
+                    <label>Data (File):</label>
+                    <input type="file" name="data_file[]" onchange="previewFile(this)">
+                    <div class="file-preview"></div>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            container.appendChild(detailDiv);
+        }
+
+        function previewFile(input) {
+            const file = input.files[0];
+            const previewContainer = input.nextElementSibling; // The .file-preview div
+
+            if (file) {
+                const fileReader = new FileReader();
+                fileReader.onload = function (e) {
+                    const fileExtension = file.name.split('.').pop().toLowerCase();
+                    let previewContent = '';
+
+                    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+                        previewContent = `<img src="${e.target.result}" alt="Image Preview" style="max-width: 100%;">`;
+                    } else if (['pdf'].includes(fileExtension)) {
+                        previewContent = `
+                            <iframe 
+                                src="${e.target.result}" 
+                                type="application/pdf" 
+                                width="100%" 
+                                height="400px" 
+                                style="border: none;">
+                            </iframe>`;
+                    } else if (['mp4', 'webm'].includes(fileExtension)) {
+                        previewContent = `<video controls width="100%">
+                            <source src="${e.target.result}" type="video/${fileExtension}">
+                            Your browser does not support the video tag.
+                        </video>`;
+                    } else if (['mp3', 'wav'].includes(fileExtension)) {
+                        previewContent = `<audio controls>
+                            <source src="${e.target.result}" type="audio/${fileExtension}">
+                            Your browser does not support the audio element.
+                        </audio>`;
+                    } else {
+                        previewContent = `<p>Cannot preview this file type. It will be uploaded.</p>`;
+                    }
+
+                    previewContainer.innerHTML = previewContent;
+                };
+                fileReader.readAsDataURL(file);
+            } else {
+                previewContainer.innerHTML = '';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="edit">
+    <h1>Modify Case Details</h1>
+        <form method="POST" action="/edit_case" enctype="multipart/form-data">
+            <label for="case_number">Case Number:</label>
+            <input type="text" id="case_number" name="case_number" required>
+            <button type="button" onclick="fetchCaseDetails()">Search Case</button><br><br>
+
+            <div id="detailsContainer">
+                <!-- Dynamic details will appear here -->
+            </div>
+
+            <button type="button" onclick="addDetail()">Add Detail</button><br><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

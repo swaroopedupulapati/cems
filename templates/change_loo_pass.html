@@ -1,0 +1,109 @@
+<html>
+    <head>
+        <title>CEMS-loo change pass</title>
+        <link rel="icon" type="image/png" href="../static/logo.png">
+        <style>
+            body {
+                /* background-color: #1A1A2E; */
+                background-color: white;
+                color: #FFFFFF;
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+            .password {
+                /* background: #121212; */
+                background-color: #195ba1;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+                width: 30%;
+                text-align: center;
+            }
+            h1 {
+                /* color: #D72638; */
+                color: black;
+            }
+            h4 {
+                color: #FFD700;
+            }
+            .input-container {
+                position: relative;
+                width: 100%;
+                margin: 10px 0;
+            }
+            input {
+                width: 100%;
+                padding: 10px;
+                background: #333;
+                border: 1px solid #444;
+                border-radius: 5px;
+                color: #FFFFFF;
+                font-size: 16px;
+                padding-right: 40px; /* Space for icon */
+            }
+            .toggle-icon {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+                font-size: 18px;
+                color: #FFD700;
+            }
+            button {
+                width: 100%;
+                padding: 10px;
+                margin-top: 15px;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                /* background: #D72638; */
+                background: #1A1A2E;
+                color: #FFFFFF;
+                cursor: pointer;
+                transition: 0.3s;
+            }
+            button:hover {
+                /* background: #A30000; */
+                background: #13134b;
+                transform: scale(1.02);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="password">
+            <h1 style="text-align:center">Change Password</h1>
+            <h4 style="text-align:center">{{msg}}</h4>
+            <form action="/loo_changepasss" method="post">
+                <div class="input-container">
+                    <input type="text" name="op" placeholder="Enter old password">
+                </div>
+                <div class="input-container">
+                    <input type="password" id="new_password" name="np" placeholder="Enter new password">
+                    <span class="toggle-icon" onclick="togglePassword()">🙈</span>
+                </div>
+                <button type="submit">Change Password</button>
+            </form>
+        </div>
+
+        <script>
+            function togglePassword() {
+                let passwordInput = document.getElementById("new_password");
+                let icon = document.querySelector(".toggle-icon");
+
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    icon.textContent = "🙉"; // Change to ear-covered emoji
+                } else {
+                    passwordInput.type = "password";
+                    icon.textContent = "🙈"; // Change back to eye-covered emoji
+                }
+            }
+        </script>
+    </body>
+</html>
