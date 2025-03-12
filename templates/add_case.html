@@ -157,7 +157,7 @@
         <h1>Enter Case Details</h1>
         <h4 style="text-align:center">{{msg}}</h4>
 
-        <form method="POST" action="/add_case" enctype="multipart/form-data">
+        <form method="POST" action="/{{id}}/add_case" enctype="multipart/form-data">
             <label for="case_number">Case Number:</label>
             <input type="text" id="case_number" name="case_number" required><br><br>
 

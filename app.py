@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, send_file, Response
+from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, send_file, Response,session
 from pymongo import MongoClient
 import gridfs
 from bson.objectid import ObjectId
@@ -15,9 +15,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
+import time
+import random
 
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Needed for using sessions
 
 
 # MongoDB Configuration
@@ -41,11 +44,84 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
+# Function to generate OTP
+def generate_otp():
+    otp = random.randint(100000, 999999)  # Generates a 6-digit OTP
+    return otp
 
-#higher_credentials.insert_one({"id":"100","Name":"Police","password":"police@123","Email":"police@gmail.com","phone_no":"100","Address":"Police station","Qualification":"distinsion"})
+# Function to send OTP email
+def send_otp_email(recipient_email, otp):
+    try:
+        # Set up the MIME message
+        message = MIMEMultipart()
+        message['From'] = SENDER_EMAIL
+        message['To'] = recipient_email
+        message['Subject'] = 'Your OTP Code'
+        body = f'Your OTP is: {otp}'
+        message.attach(MIMEText(body, 'plain'))
+        
+        # Connect to the Gmail SMTP server
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, recipient_email, message.as_string())
+            print("OTP sent successfully")
+    except Exception as e:
+        print(f"Error sending OTP email: {e}")
 
-higher_id=""
-lower_id=""
+@app.route('/generate_otp', methods=['POST'])
+def generate_otp_route():
+    if request.form.get('email'):
+        email = request.form.get('email')
+    elif request.form.get('user_id'):
+        user_id = request.form.get('user_id')
+        email = higher_credentials.find_one({"id": user_id})['Email']
+
+    if email:
+        # Generate OTP and store it in the session
+        otp = generate_otp()
+        session['otp'] = otp
+        session['otp_time'] = time.time()
+
+        # Send OTP to the provided email
+        send_otp_email(email, otp)
+
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Email is required'})
+
+@app.route('/verify_otp', methods=['POST'])
+def verify_otp():
+    user_otp = request.form.get('otp')
+
+    if 'otp' in session:
+        stored_otp = session['otp']
+        otp_time = session['otp_time']
+
+        # Check if OTP is still valid (5-minute validity)
+        if time.time() - otp_time < 300:  # 300 seconds = 5 minutes
+            if int(user_otp) == stored_otp:  # Check if OTP matches
+                return jsonify({'status': 'success', 'message': 'OTP Verified. You can now submit the form.'})
+            else:
+                return jsonify({'status': 'error', 'message': 'Invalid OTP. Please try again.'})
+        else:
+            return jsonify({'status': 'error', 'message': 'OTP expired. Please generate a new one.'})
+
+    return jsonify({'status': 'error', 'message': 'OTP not generated yet.'})
+
+@app.route('/submit_form', methods=['POST'])
+def submit_form():
+    # Get user input
+    name = request.form['name']
+    email = request.form['email']
+
+    # You can now process the form data, for example, save it to a database, etc.
+    # After submission, redirect to a different page.
+    return redirect(url_for('success'))
+
+@app.route('/success', methods=['GET'])
+def success():
+    return "Form submitted successfully! Welcome to the next page."
 
 # home
 @app.route('/',methods=['GET', 'POST'])
@@ -71,7 +147,7 @@ def higher_login():
     if higher_credentials.find_one({"id":id,"password":password}) :
         a=list(higher_credentials.find_one({"id":id,"password":password}))
         print(a)
-        return render_template('higher_home.html')
+        return redirect(f"/{id}/hio_home")
     else:
         return render_template("higher_login.html",msg="invalid credentials")
 
@@ -86,27 +162,35 @@ def lower_login():
     if lower_credentials.find_one({"id":id,"password":password}) :
         a=list(lower_credentials.find_one({"id":id,"password":password}))
         print(a)
-        return render_template('lower_home.html')
+        return redirect(f"/{id}/loo_home")
     else:
         return render_template("lower_login.html",msg="invalid credentials")
 
+
+@app.route('/<id>/hio_home',methods=['GET',"POST"])
+def hio_home(id):
+    return render_template('higher_home.html',id=id)
+
+@app.route('/<id>/loo_home',methods=['GET',"POST"])
+def loo_home(id):
+    return render_template('lower_home.html',id=id)
+
 # for viewing higher profile
-@app.route('/viewhipro',methods=['GET', 'POST'])
-def viewhipro():
-    global higher_id
-    data=dict(higher_credentials.find_one({"id":higher_id}))
+@app.route('/<id>/viewhipro',methods=['GET', 'POST'])
+def viewhipro(id):
+    data=dict(higher_credentials.find_one({"id":id}))
     return render_template("view_hip.html",profile=data)
 
 # for viewing lower profile
-@app.route('/viewlopro',methods=['GET', 'POST'])
-def viewlopro():
+@app.route('/<id>/viewlopro',methods=['GET', 'POST'])
+def viewlopro(id):
     global lower_id
-    data=dict(lower_credentials.find_one({"id":lower_id}))
-    return render_template("view_lop.html",profile=data)
+    data=dict(lower_credentials.find_one({"id":id}))
+    return render_template("view_lop.html",id=id,profile=data)
 
 # for registering higher offiecial
-@app.route('/reghio',methods=['GET', 'POST'])
-def reghio():
+@app.route('/<id>/reghio',methods=['GET', 'POST'])
+def reghio(id):
     if request.method == 'POST':
         global higher_credentials
         ID=request.form['id']
@@ -117,7 +201,7 @@ def reghio():
         Address=request.form["address"]
         Qualification=request.form["qualification"]
         if higher_credentials.find_one({"id":ID}):
-            return render_template("register_hio.html",msg=f"{ID} already exists")
+            return render_template("register_hio.html",id=id,msg=f"{ID} already exists")
         else:
             higher_credentials.insert_one({"id":ID,"Name":Name,"password":Password,
                                          "Email":Email,"phone_no":Phone,"Address":Address,
@@ -144,13 +228,13 @@ def reghio():
                 print("Email sent successfully!")
             except Exception as e:
                 print(f"Failed to send email: {e}")
-            return render_template("register_hio.html",msg=f"{ID} updated successfully")
+            return render_template("register_hio.html",id=id,msg=f"{ID} updated successfully")
     else:
-        return render_template("register_hio.html")
+        return render_template("register_hio.html",id=id)
 
 # for registering lower official
-@app.route('/regloo',methods=['GET', 'POST'])
-def regloo():
+@app.route('/<id>/regloo',methods=['GET', 'POST'])
+def regloo(id):
     if request.method == 'POST':
         global lower_credentials
         ID=request.form['id']
@@ -161,7 +245,7 @@ def regloo():
         Address=request.form["address"]
         Qualification=request.form["qualification"]
         if lower_credentials.find_one({"id":ID}):
-            return render_template("register_loo.html",msg=f"{ID} already exists")
+            return render_template("register_loo.html",id=id,msg=f"{ID} already exists")
         else:
             lower_credentials.insert_one({"id":ID,"Name":Name,"password":Password,
                                          "Email":Email,"phone_no":Phone,"Address":Address,
@@ -188,71 +272,71 @@ def regloo():
                 print("Email sent successfully!")
             except Exception as e:
                 print(f"Failed to send email: {e}")
-            return render_template("register_loo.html",msg=f"{ID} updated successfully")
+            return render_template("register_loo.html",id=id,msg=f"{ID} updated successfully")
     else:
-        return render_template("register_loo.html")
+        return render_template("register_loo.html",id=id)
 
 # for removing higher official
-@app.route('/remhio',methods=['GET', 'POST'])
-def remhio():
+@app.route('/<id>/remhio',methods=['GET', 'POST'])
+def remhio(id):
     if request.method == 'POST':
         eid=request.form['eid']
         reid=request.form['reid']
         if eid==reid and (higher_credentials.find_one({"id":eid})):
             higher_credentials.delete_one({"id":eid})
-            return render_template("remove_hio.html",msg=f"{eid} removed successfully")
+            return render_template("remove_hio.html",id=id,msg=f"{eid} removed successfully")
         else:
-            return render_template("remove_hio.html",msg="Invalid")
+            return render_template("remove_hio.html",id=id,msg="Invalid")
     else:
-        return render_template("remove_hio.html")
+        return render_template("remove_hio.html",id=id)
 
 # for removing lower official
-@app.route('/remloo',methods=['GET', 'POST'])
-def remloo():
+@app.route('/<id>/remloo',methods=['GET', 'POST'])
+def remloo(id):
     if request.method == 'POST':
         eid=request.form['eid']
         reid=request.form['reid']
         if eid==reid and (lower_credentials.find_one({"id":eid})):
             lower_credentials.delete_one({"id":eid})
-            return render_template("remove_loo.html",msg=f"{eid} removed successfully")
+            return render_template("remove_loo.html",id=id,msg=f"{eid} removed successfully")
         else:
-            return render_template("remove_loo.html",msg="Invalid")
+            return render_template("remove_loo.html",id=id,msg="Invalid")
     else:
-        return render_template("remove_loo.html")
+        return render_template("remove_loo.html",id=id)
 
 # for changing password for higher official
-@app.route('/hio_changepasss',methods=['GET', 'POST'])
-def hio_changepasss():
+@app.route('/<id>/hio_changepasss',methods=['GET', 'POST'])
+def hio_changepasss(id):
     global higher_id
     if request.method == 'POST':
         op=request.form['op']
         np=request.form['np']
-        if higher_credentials.find_one({"id":higher_id,"password":op}):
-            higher_credentials.update_many({"id":higher_id},{"$set":{"password":np}})
-            return render_template("change_hio_pass.html",msg=f"password updated successfully")
+        if higher_credentials.find_one({"id":id,"password":op}):
+            higher_credentials.update_many({"id":id},{"$set":{"password":np}})
+            return render_template("change_hio_pass.html",id=id,msg=f"password updated successfully")
         else:
-            return render_template("change_hio_pass.html",msg=f"Invalid")
+            return render_template("change_hio_pass.html",id=id,msg=f"Invalid")
     else:
-        return render_template("change_hio_pass.html")
+        return render_template("change_hio_pass.html",id=id)
 
 # for changing password for lower official
-@app.route('/loo_changepasss',methods=['GET', 'POST'])
-def loo_changepasss():
+@app.route('/<id>/loo_changepasss',methods=['GET', 'POST'])
+def loo_changepasss(id):
     global lower_id
     if request.method == 'POST':
         op=request.form['op']
         np=request.form['np']
-        if lower_credentials.find_one({"id":lower_id,"password":op}):
-            lower_credentials.update_many({"id":lower_id},{"$set":{"password":np}})
-            return render_template("change_loo_pass.html",msg=f"password updated successfully")
+        if lower_credentials.find_one({"id":id,"password":op}):
+            lower_credentials.update_many({"id":id},{"$set":{"password":np}})
+            return render_template("change_loo_pass.html",id=id,msg=f"password updated successfully")
         else:
-            return render_template("change_loo_pass.html")
+            return render_template("change_loo_pass.html",id=id)
     else:
-        return render_template("change_loo_pass.html")
+        return render_template("change_loo_pass.html",id=id)
 
 # for adding new case
-@app.route('/add_case', methods=['GET', 'POST'])
-def add_case():
+@app.route('/<id>/add_case', methods=['GET', 'POST'])
+def add_case(id):
     if request.method == 'POST':
         # Get case number
         case_number = request.form.get('case_number')
@@ -280,11 +364,11 @@ def add_case():
                 'details': case_details
             }
             collection.insert_one(case_data)
-            return render_template("add_case.html",msg=f"case added successfully")
+            return render_template("add_case.html",id=id,msg=f"case added successfully")
         else:
-            return render_template("add_case.html",msg=f"Invalid")
+            return render_template("add_case.html",id=id,msg=f"Invalid")
     else:
-        return render_template('add_case.html')
+        return render_template('add_case.html',id=id)
 
 
 @app.route('/download/<file_id>')
@@ -294,8 +378,8 @@ def download(file_id):
     return send_file(file_data, download_name=file_data.filename, as_attachment=True)
 
 # for viewing existing case
-@app.route('/view', methods=['GET', 'POST'])
-def view():
+@app.route('/<id>/view', methods=['GET', 'POST'])
+def view(id):
     case_data = None
     file_contents = []
 
@@ -329,9 +413,8 @@ def view():
 
             file_contents = case_details_with_files
         else:
-            return render_template("view_case.html",msg="not occur")
-    return render_template('view_case.html', case_data=case_data, file_contents=file_contents)
-
+            return render_template("view_case.html",msg="not occur",id=id)
+    return render_template('view_case.html', id=id,case_data=case_data, file_contents=file_contents)
 
 
 @app.route('/download_pdf/<case_number>')
@@ -530,8 +613,8 @@ def send_email_with_attachment(recipient_email, subject, body, pdf1,pdf2, pr_nam
 
 
 
-@app.route('/edit_case', methods=['GET', 'POST'])
-def edit_case():
+@app.route('/<id>/edit_case', methods=['GET', 'POST'])
+def edit_case(id):
     if request.method == 'POST':
         case_number = request.form.get('case_number')
         labels = request.form.getlist('label[]')
@@ -569,7 +652,6 @@ def edit_case():
         casedata = collection.find_one({'case_number': case_number})
         pdf1 = create_case_pdf(casedata)
 
-
         # Update the case in MongoDB
         collection.update_one(
             {'case_number': case_number},
@@ -578,8 +660,6 @@ def edit_case():
         )
         case_data = collection.find_one({'case_number': case_number})
         pdf2=create_case_pdf(case_data)
-
-
         
         # Send Email
         subject = f"Case Details for Case Number {case_number}"
@@ -591,7 +671,7 @@ def edit_case():
 
         return "Case details have been successfully updated!"
 
-    return render_template('edit_case.html')
+    return render_template('edit_case.html',id=id)
 
 
 @app.route('/fetch_case_details/<case_number>', methods=['GET'])
@@ -665,8 +745,8 @@ def send_email(recipient_email, subject, body, pdf1, pr_name,):
         print(f"Failed to send email: {e}")
 
 # for removing existing case
-@app.route('/removecase',methods=['GET', 'POST'])
-def removecase():
+@app.route('/<id>/removecase',methods=['GET', 'POST'])
+def removecase(id):
     if request.method == 'POST':
         case_no=request.form['case_no']
         rcase_no=request.form['rcase_no']
@@ -685,7 +765,7 @@ def removecase():
         else:
             return render_template("remove_case.html",msg=f"{case_no} has been removed successfully")
     else:
-        return render_template("remove_case.html")
+        return render_template("remove_case.html",id=id)
 
 
 

@@ -142,7 +142,7 @@
     <div class="details">
         <h1>View Case Details</h1>
         <h4>{{msg}}</h4>
-        <form method="POST" action="/view">
+        <form method="POST" action="/{{id}}/view">
             <label for="case_number">Enter Case Number:</label>
             <input type="text" id="case_number" name="case_number" required>
             <button type="submit">Search</button>

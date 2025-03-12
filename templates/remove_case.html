@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <title>CEMS-Remove case</title>
@@ -73,7 +73,7 @@
     <div class="remove">
         <h1 >Remove Case</h1>
         <h4 >{{msg}}</h4>
-        <form action="/removecase" method="post">
+        <form action="/{{id}}/removecase" method="post">
             <h3>Enter case no</h3>
             <input type="text"name="case_no" placeholder="Enter_case_no">
             <h3>conform case no</h3>
@@ -81,5 +81,144 @@
             <button type="submit" >remove</button>
         </form>
     </div>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>CEMS-Remove case</title>
+    <link rel="icon" type="image/png" href="../static/logo.png">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: white;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .remove {
+            background-color: #195ba1;  
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
+            width: 350px;
+            text-align: center;
+        }
+        h1 {
+            color: black;
+        }
+        h3 {
+            color: white;
+            font-size: 1rem;
+            margin: 8px 0 4px;
+            text-align: left;
+        }
+        h4 {
+            color: #FFA500;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 95%;
+            padding: 10px;
+            margin: 5px 0 10px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #FFFFFF;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: #1A1A2E;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #13134b;
+            transform: scale(1.05);
+        }
+        #otp-section { display: none; }
+    </style>
+</head>
+<body>
+    <div class="remove">
+        <h1>Remove Case</h1>
+        <h4>{{msg}}</h4>
+        <div id="flash-messages"></div>
+        <form id="remove-form" action="/{{id}}/removecase" method="post">
+            <h3>Enter case no</h3>
+            <input type="text" name="case_no" placeholder="Enter case no" required>
+            <h3>Confirm case no</h3>
+            <input type="text" name="rcase_no" placeholder="Re-enter case no" required>
+            
+            <button type="button" id="generate-otp">Generate OTP</button>
+            
+            <div id="otp-section">
+                <h3>OTP:</h3>
+                <input type="text" name="otp" id="otp" placeholder="Enter OTP" required><br>
+                <button type="button" id="verify-otp">Verify OTP</button>
+            </div>
+            
+            <button type="submit" id="submit-form" disabled>Remove</button>
+        </form>
+    </div>
+
+    <script>
+        $('#generate-otp').click(function() {
+            $.ajax({
+                url: '/generate_otp',
+                method: 'POST',
+                data: { user_id: '{{id}}' },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#otp-section').show();
+                        $('#flash-messages').html('<div style="color: green;">OTP Sent! Check your email.</div>');
+                    } else {
+                        $('#flash-messages').html('<div style="color: red;">Error generating OTP. Try again.</div>');
+                    }
+                },
+                error: function() {
+                    $('#flash-messages').html('<div style="color: red;">An error occurred while generating OTP.</div>');
+                }
+            });
+        });
+
+        $('#verify-otp').click(function() {
+            var otp = $('#otp').val();
+            if (!otp) {
+                $('#flash-messages').html('<div style="color: red;">Please enter OTP.</div>');
+                return;
+            }
+            $.ajax({
+                url: '/verify_otp',
+                method: 'POST',
+                data: { otp: otp, user_id: '{{id}}' },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#flash-messages').html('<div style="color: green;">OTP Verified! You can now remove the case.</div>');
+                        $('#submit-form').prop('disabled', false);
+                    } else {
+                        $('#flash-messages').html('<div style="color: red;">' + response.message + '</div>');
+                    }
+                },
+                error: function() {
+                    $('#flash-messages').html('<div style="color: red;">An error occurred while verifying OTP.</div>');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

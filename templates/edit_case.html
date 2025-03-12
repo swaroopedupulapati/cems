@@ -221,7 +221,7 @@
 <body>
     <div class="edit">
     <h1>Modify Case Details</h1>
-        <form method="POST" action="/edit_case" enctype="multipart/form-data">
+        <form method="POST" action="/{{id}}/edit_case" enctype="multipart/form-data">
             <label for="case_number">Case Number:</label>
             <input type="text" id="case_number" name="case_number" required>
             <button type="button" onclick="fetchCaseDetails()">Search Case</button><br><br>
