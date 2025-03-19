@@ -17,6 +17,8 @@ from email.mime.text import MIMEText
 from email import encoders
 import time
 import random
+from pytz import timezone 
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -37,9 +39,11 @@ collection = my_db['cases']
 fs = gridfs.GridFS(my_db)  # Initialize GridFS
 higher_credentials = my_db["higher_credentials"]
 lower_credentials=my_db["lower_credentials"]
+ledger=my_db["ledger"]
+
 # Email Configuration
-SENDER_EMAIL = "swaroopqis@gmail.com"
-SENDER_PASSWORD =  "qihb sgty ysew ikes"
+SENDER_EMAIL = "pchub.secure@gmail.com"
+SENDER_PASSWORD =  "nrpo swmh wbuv dkcr"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -47,6 +51,7 @@ SMTP_PORT = 587
 # Function to generate OTP
 def generate_otp():
     otp = random.randint(100000, 999999)  # Generates a 6-digit OTP
+    print(otp)
     return otp
 
 # Function to send OTP email
@@ -200,13 +205,16 @@ def reghio(id):
         Phone=request.form["phone"]
         Address=request.form["address"]
         Qualification=request.form["qualification"]
-        if higher_credentials.find_one({"id":ID}):
+        if higher_credentials.find_one({"id":ID} or lower_credentials.find_one({"id":ID})):
             return render_template("register_hio.html",id=id,msg=f"{ID} already exists")
         else:
             higher_credentials.insert_one({"id":ID,"Name":Name,"password":Password,
                                          "Email":Email,"phone_no":Phone,"Address":Address,
                                          "Qualification":Qualification
                                          })
+            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{ID} registered as higher official"})
             try:
                 # Set up the SMTP server
                 server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
@@ -251,6 +259,9 @@ def regloo(id):
                                          "Email":Email,"phone_no":Phone,"Address":Address,
                                          "Qualification":Qualification
                                          })
+            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{ID} registered as lower official"})
             try:
                 # Set up the SMTP server
                 server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
@@ -284,6 +295,9 @@ def remhio(id):
         reid=request.form['reid']
         if eid==reid and (higher_credentials.find_one({"id":eid})):
             higher_credentials.delete_one({"id":eid})
+            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{eid} removed as higher official"})
             return render_template("remove_hio.html",id=id,msg=f"{eid} removed successfully")
         else:
             return render_template("remove_hio.html",id=id,msg="Invalid")
@@ -298,6 +312,9 @@ def remloo(id):
         reid=request.form['reid']
         if eid==reid and (lower_credentials.find_one({"id":eid})):
             lower_credentials.delete_one({"id":eid})
+            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{eid} removed as lower official"})
             return render_template("remove_loo.html",id=id,msg=f"{eid} removed successfully")
         else:
             return render_template("remove_loo.html",id=id,msg="Invalid")
@@ -364,6 +381,9 @@ def add_case(id):
                 'details': case_details
             }
             collection.insert_one(case_data)
+            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{case_number} added"} )
             return render_template("add_case.html",id=id,msg=f"case added successfully")
         else:
             return render_template("add_case.html",id=id,msg=f"Invalid")
@@ -658,6 +678,9 @@ def edit_case(id):
             {'$set': {'details': case_details}},
             upsert=True
         )
+        date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+        time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+        ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{case_number} updated by {id}"} )
         case_data = collection.find_one({'case_number': case_number})
         pdf2=create_case_pdf(case_data)
         
@@ -761,11 +784,23 @@ def removecase(id):
             send_email(recipient_email, subject, body, pdf1, pr_name)
 
             collection.delete_one({'case_number': case_no})
+            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{case_no} has been removed by {id}"} )
             return render_template("remove_case.html",msg=f"{case_no} has been removed successfully")
         else:
             return render_template("remove_case.html",msg=f"{case_no} has been removed successfully")
     else:
         return render_template("remove_case.html",id=id)
+
+
+
+# for viewing ledger
+@app.route('/<id>/viewledger',methods=['GET', 'POST'])
+def viewledger(id):
+    data=list(ledger.find())
+    return render_template("ledger.html",id=id,ledger=data)
+
 
 
 
