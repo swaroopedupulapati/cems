@@ -205,7 +205,7 @@ def reghio(id):
         Phone=request.form["phone"]
         Address=request.form["address"]
         Qualification=request.form["qualification"]
-        if higher_credentials.find_one({"id":ID} or lower_credentials.find_one({"id":ID})):
+        if higher_credentials.find_one({"id":ID})or lower_credentials.find_one({"id":ID}):
             return render_template("register_hio.html",id=id,msg=f"{ID} already exists")
         else:
             higher_credentials.insert_one({"id":ID,"Name":Name,"password":Password,
@@ -252,7 +252,7 @@ def regloo(id):
         Phone=request.form["phone"]
         Address=request.form["address"]
         Qualification=request.form["qualification"]
-        if lower_credentials.find_one({"id":ID}):
+        if lower_credentials.find_one({"id":ID}) or higher_credentials.find_one({"id":ID}):
             return render_template("register_loo.html",id=id,msg=f"{ID} already exists")
         else:
             lower_credentials.insert_one({"id":ID,"Name":Name,"password":Password,
@@ -363,28 +363,31 @@ def add_case(id):
         texts = request.form.getlist('data_text[]')
         files = request.files.getlist('data_file[]')
         if case_number :
-            # Store case details
-            case_details = []
-            for i in range(len(labels)):
-                detail = {'label': labels[i], 'data': texts[i] if texts[i] else None}
+            if collection.find_one({"case_number":case_number}): 
+                return render_template("add_case.html",id=id,msg="Case Number already exists")
+            else:
+                # Store case details
+                case_details = []
+                for i in range(len(labels)):
+                    detail = {'label': labels[i], 'data': texts[i] if texts[i] else None}
+                    
+                    # Store file in GridFS if uploaded
+                    if files[i] and files[i].filename:
+                        file_id = fs.put(files[i], filename=files[i].filename)
+                        detail['file_id'] = str(file_id)  # Store file ID in MongoDB
+                    
+                    case_details.append(detail)
                 
-                # Store file in GridFS if uploaded
-                if files[i] and files[i].filename:
-                    file_id = fs.put(files[i], filename=files[i].filename)
-                    detail['file_id'] = str(file_id)  # Store file ID in MongoDB
-                
-                case_details.append(detail)
-            
-            # Insert case data into MongoDB
-            case_data = {
-                'case_number': case_number,
-                'details': case_details
-            }
-            collection.insert_one(case_data)
-            date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
-            time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
-            ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{case_number} added"} )
-            return render_template("add_case.html",id=id,msg=f"case added successfully")
+                # Insert case data into MongoDB
+                case_data = {
+                    'case_number': case_number,
+                    'details': case_details
+                }
+                collection.insert_one(case_data)
+                date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+                time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+                ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{case_number} added"} )
+                return render_template("add_case.html",id=id,msg=f"case added successfully")
         else:
             return render_template("add_case.html",id=id,msg=f"Invalid")
     else:
@@ -517,7 +520,7 @@ def download_pdf(case_number):
         mimetype='application/pdf'
     )
 
-
+'''
 def create_case_pdf(case_data):
     """
     Generate a PDF for the given case data.
@@ -692,9 +695,9 @@ def edit_case(id):
         send_email_with_attachment(recipient_email, subject, body, pdf1,pdf2, pr_name,up_name)
 
 
-        return "Case details have been successfully updated!"
-
-    return render_template('edit_case.html',id=id)
+        return render_template('edit_case.html',id=id,msg=f"Case {case_number} updated successfully")
+    else:
+        return render_template('edit_case.html',id=id)
 
 
 @app.route('/fetch_case_details/<case_number>', methods=['GET'])
@@ -732,6 +735,223 @@ def downloadd_files(file_id):
     }.get(file_type, 'application/octet-stream')
 
     return Response(file_data.read(), content_type=content_type)
+'''
+
+
+
+
+
+
+
+def create_case_pdf(case_data):
+    """
+    Generate a PDF for the given case data.
+    :param case_data: Dictionary containing case details.
+    :return: BytesIO object containing the generated PDF.
+    """
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Title for the case
+    title = Paragraph(f"<strong>Case Details for Case Number: {case_data['case_number']}</strong>", styles['Title'])
+    elements.append(title)
+    elements.append(Spacer(1, 12))
+
+    for detail in case_data['details']:
+        # Add case details
+        elements.append(Paragraph(f"<strong>{detail['label']}</strong>", styles['BodyText']))
+        elements.append(Paragraph(f"{detail['data']}", styles['BodyText']))
+        elements.append(Spacer(1, 12))
+
+        # Handle file data
+        if 'file_id' in detail:
+            file_data = fs.get(ObjectId(detail['file_id']))
+            mime_type = mimetypes.guess_type(file_data.filename)[0]
+
+            if mime_type and mime_type.startswith('text'):
+                # Include text file content
+                try:
+                    file_content = file_data.read().decode('utf-8')
+                    elements.append(Paragraph(f"<strong></strong>", styles['BodyText']))
+                    elements.append(Paragraph(file_content, styles['BodyText']))
+                except UnicodeDecodeError:
+                    elements.append(Paragraph(f"<strong></strong> Unable to decode text content", styles['BodyText']))
+                elements.append(Spacer(1, 12))
+
+            elif mime_type == 'application/pdf':
+                # Handle PDF file content
+                elements.append(Paragraph(f"<strong></strong>", styles['BodyText']))
+
+                # Convert PDF pages to images and add them to the PDF
+                pdf_buffer = BytesIO(file_data.read())
+                pdf_document = fitz.open(stream=pdf_buffer, filetype="pdf")
+                for page_num in range(pdf_document.page_count):
+                    page = pdf_document.load_page(page_num)
+                    pix = page.get_pixmap()
+                    img_data = BytesIO(pix.tobytes())  # Convert page to image
+                    img = Image(img_data, width=400, height=300)
+                    elements.append(img)
+                    elements.append(Spacer(1, 12))
+                
+                elements.append(Spacer(1, 12))
+
+            elif mime_type and mime_type.startswith('image'):
+                # Embed image in the PDF
+                img_data = BytesIO(file_data.read())
+                img = Image(img_data, width=400, height=300)
+                elements.append(img)
+                elements.append(Spacer(1, 12))
+
+    # Build the PDF document
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+
+def send_email_with_attachment(recipient_email, subject, body, pdf1,pdf2, pr_name,up_name):
+    """
+    Send an email with the provided PDF as an attachment using Gmail.
+    :param recipient_email: Email address of the recipient.
+    :param subject: Email subject.
+    :param body: Email body text.
+    :param pdf1: BytesIO object containing the PDF.
+    :param pr_name: Name of the PDF attachment.
+
+    """
+
+    a=list(higher_credentials.find())
+    emails = [item['Email'] for item in a]
+    print(emails)
+    for email in emails:
+        try:
+            # Set up the SMTP server
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+
+            # Create the email
+            msg = MIMEMultipart()
+            msg['From'] = SENDER_EMAIL
+            msg['To'] = email   #recipient_email
+            msg['Subject'] = subject
+
+            # Attach the email body
+            msg.attach(MIMEText(body, 'plain'))
+            text_part = MIMEText(f"this mail contains the previous and updated case details about the case no {body}\n\n", 'plain')
+            msg.attach(text_part)
+        
+            # Attach the PDF
+            part = MIMEBase('application', 'octet-stream')
+            part.set_payload(pdf1.getvalue())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{pr_name}"')
+            msg.attach(part)
+
+            # Attach the PDF
+            part2 = MIMEBase('application', 'octet-stream')
+            part2.set_payload(pdf2.getvalue())
+            encoders.encode_base64(part2)
+            part2.add_header('Content-Disposition', f'attachment; filename="{up_name}"')
+            msg.attach(part2)
+
+            # Send the email
+            server.sendmail(SENDER_EMAIL, recipient_email, msg.as_string())
+            server.quit()
+            print("Email sent successfully!")
+        except Exception as e:
+            print(f"Failed to send email: {e}")
+
+
+
+
+
+@app.route('/<id>/edit_case', methods=['GET', 'POST'])
+def edit_case(id):
+    if request.method == 'POST':
+        case_number = request.form.get('case_number')
+        labels = request.form.getlist('label[]')
+        texts = request.form.getlist('data_text[]')
+        files = request.files.getlist('data_file[]')
+
+        # Prepare case details
+        case_details = []
+        for i in range(len(labels)):
+            detail = {'label': labels[i], 'data': texts[i] if texts[i] else None}
+            if files[i] and files[i].filename:
+                file_id = fs.put(files[i], filename=files[i].filename)
+                detail['file_id'] = str(file_id)
+            case_details.append(detail)
+
+        recipient_email = "swaroopedupulapati1@gmail.com"
+        casedata = collection.find_one({'case_number': case_number})
+        pdf1 = create_case_pdf(casedata)
+
+        # Insert or update the case in MongoDB
+        collection.update_one(
+            {'case_number': case_number},
+            {'$set': {'details': case_details}},
+            upsert=True
+        )
+        case_data = collection.find_one({'case_number': case_number})
+        pdf2=create_case_pdf(case_data)
+
+         # Send Email
+        subject = f"Case Details for Case Number {case_number}"
+        body = f"{case_number}."
+        pr_name = f"case_{case_number}_details.pdf"
+        up_name= f"case_{case_number}_updated_details.pdf"
+        send_email_with_attachment(recipient_email, subject, body, pdf1,pdf2, pr_name,up_name)
+        return render_template('edit_case.html',id=id,msg=f"Case {case_number} updated successfully")
+
+
+        # return "Case details have been successfully submitted or updated!"
+
+    return render_template('edit_case.html',id=id)
+
+
+@app.route('/fetch_case/<case_number>', methods=['GET'])
+def fetch_case(case_number):
+    """Fetch case details by case number."""
+    case = collection.find_one({'case_number': case_number})
+    if case:
+        # Convert ObjectId fields to strings
+        case['_id'] = str(case['_id'])
+        for detail in case['details']:
+            if 'file_id' in detail:
+                detail['file_id'] = str(detail['file_id'])
+                file = fs.get(ObjectId(detail['file_id']))
+                detail['filename'] = file.filename
+        return jsonify(case)
+    return jsonify({'error': 'Case not found'}), 404
+
+@app.route('/downloadd/<file_id>')
+def downloadd(file_id):
+    """Download or render files from GridFS using file_id."""
+    file_data = fs.get(ObjectId(file_id))
+    file_type = file_data.filename.split('.')[-1].lower()
+    content_type = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'txt': 'text/plain',
+        'csv': 'text/csv',
+    }.get(file_type, 'application/octet-stream')
+
+    return Response(file_data.read(), content_type=content_type)
+
+
+
+
+
+
 
 # for sending email for removing case
 def send_email(recipient_email, subject, body, pdf1, pr_name,):
