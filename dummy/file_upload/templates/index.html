@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Case Details</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+    </style>
+    <script>
+        function addRow() {
+            const table = document.getElementById('detailsTable');
+            const row = table.insertRow();
+            row.innerHTML = `
+                <td><input type="text" name="label[]" required></td>
+                <td><input type="text" name="data_text[]"></td>
+                <td><input type="file" name="data_file[]"></td>
+                <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+            `;
+        }
+
+        function removeRow(button) {
+            const row = button.parentElement.parentElement;
+            row.remove();
+        }
+    </script>
+</head>
+<body>
+    <h1>Enter Case Details</h1>
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <label for="case_number">Case Number:</label>
+        <input type="text" id="case_number" name="case_number" required><br><br>
+
+        <table id="detailsTable">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Data (Text)</th>
+                    <th>Data (File)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" name="label[]" required></td>
+                    <td><input type="text" name="data_text[]"></td>
+                    <td><input type="file" name="data_file[]"></td>
+                    <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button type="button" onclick="addRow()">Add Row</button><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Case Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .detail {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .data {
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .file-input {
+            margin-top: 10px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .remove-btn {
+            background-color: #f44336;
+        }
+        .remove-btn:hover {
+            background-color: #e53935;
+        }
+    </style>
+    <script>
+        function addDetail() {
+            const container = document.getElementById('detailsContainer');
+            const detailDiv = document.createElement('div');
+            detailDiv.classList.add('detail');
+            detailDiv.innerHTML = `
+                <div class="label">
+                    <label>Label:</label>
+                    <input type="text" name="label[]" required>
+                </div>
+                <div class="label">
+                    <label>Data (Text):</label>
+                    <input type="text" name="data_text[]">
+                </div>
+                <div class="label file-input">
+                    <label>Data (File):</label>
+                    <input type="file" name="data_file[]">
+                </div>
+                <button type="button" class="remove-btn" onclick="removeDetail(this)">Remove</button>
+            `;
+            container.appendChild(detailDiv);
+        }
+
+        function removeDetail(button) {
+            const detailDiv = button.parentElement;
+            detailDiv.remove();
+        }
+    </script>
+</head>
+<body>
+    <h1>Enter Case Details</h1>
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <label for="case_number">Case Number:</label>
+        <input type="text" id="case_number" name="case_number" required><br><br>
+
+        <div id="detailsContainer">
+            <div class="detail">
+                <div class="label">
+                    <label>Label:</label>
+                    <input type="text" name="label[]" required>
+                </div>
+                <div class="label">
+                    <label>Data (Text):</label>
+                    <input type="text" name="data_text[]">
+                </div>
+                <div class="label file-input">
+                    <label>Data (File):</label>
+                    <input type="file" name="data_file[]">
+                </div>
+            </div>
+        </div>
+
+        <button type="button" onclick="addDetail()">Add Detail</button><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Case Details with File Preview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color:black;
+            color: white;
+        }
+        .detail {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color:transparent;
+        }
+        .label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .file-preview {
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f4f4f4;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .remove-btn {
+            background-color: #f44336;
+        }
+        .remove-btn:hover {
+            background-color: #e53935;
+        }
+        form{
+            background-color:rgb(91, 88, 88);
+            padding: 2vw 3vw 2vw 3vw;
+            border-radius: 2vw;
+        }
+    </style>
+    <script>
+        function addDetail() {
+            const container = document.getElementById('detailsContainer');
+            const detailDiv = document.createElement('div');
+            detailDiv.classList.add('detail');
+            detailDiv.innerHTML = `
+                <div class="label">
+                    <label>Label:</label>
+                    <input type="text" name="label[]" required>
+                </div>
+                <div class="label">
+                    <label>Data (Text):</label>
+                    <input type="text" name="data_text[]">
+                </div>
+                <div class="label">
+                    <label>Data (File):</label>
+                    <input type="file" name="data_file[]" onchange="previewFile(this)">
+                </div>
+                <div class="file-preview" style="display:none;"></div>
+                <button type="button" class="remove-btn" onclick="removeDetail(this)">Remove</button>
+            `;
+            container.appendChild(detailDiv);
+        }
+
+        function removeDetail(button) {
+            const detailDiv = button.parentElement;
+            detailDiv.remove();
+        }
+
+        function previewFile(input) {
+            const file = input.files[0];
+            const previewContainer = input.parentElement.nextElementSibling;
+            previewContainer.style.display = 'block';
+
+            if (file) {
+                const reader = new FileReader();
+
+                if (file.type.startsWith('image/')) {
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `<img src="${e.target.result}" alt="Image Preview" style="max-width: 100%;">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'text/plain' || file.type === 'text/csv') {
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `<pre>${e.target.result}</pre>`;
+                    };
+                    reader.readAsText(file);
+                } else if (file.type === 'application/pdf') {
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `<embed src="${e.target.result}" type="application/pdf" width="100%" height="200px">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.innerHTML = `
+                        <p>File Name: ${file.name}</p>
+                        <p>File Size: ${(file.size / 1024).toFixed(2)} KB</p>
+                        <p>Preview not available for this file type.</p>
+                    `;
+                }
+            } else {
+                previewContainer.style.display = 'none';
+                previewContainer.innerHTML = '';
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Enter Case Details</h1>
+    <form method="POST" action="/add_case" enctype="multipart/form-data">
+        <label for="case_number">Case Number:</label>
+        <input type="text" id="case_number" name="case_number" required><br><br>
+
+        <div id="detailsContainer">
+            <div class="detail">
+                <div class="label">
+                    <label>Label:</label>
+                    <input type="text" name="label[]" required>
+                </div>
+                <div class="label">
+                    <label>Data (Text):</label>
+                    <input type="text" name="data_text[]">
+                </div>
+                <div class="label">
+                    <label>Data (File):</label>
+                    <input type="file" name="data_file[]" onchange="previewFile(this)">
+                </div>
+                <div class="file-preview" style="display:none;"></div>
+            </div>
+        </div>
+
+        <button type="button" onclick="addDetail()">Add Detail</button><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

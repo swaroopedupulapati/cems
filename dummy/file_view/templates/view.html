@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Case Details</title>
+    <style>
+        .detail {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .data, .file-content {
+            margin-top: 5px;
+            white-space: pre-wrap;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>View Case Details</h1>
+    
+    <form method="POST" action="/view">
+        <label for="case_number">Enter Case Number:</label>
+        <input type="text" id="case_number" name="case_number" required>
+        <button type="submit">Search</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li style="color: red;">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+
+    {% if case_data %}
+    <h2>Case Number: {{ case_data.case_number }}</h2>
+    <div>
+        {% for detail in case_data.details %}
+        <div class="detail">
+            <div class="label">Label:</div>
+            <div class="data">{{ detail.label }}</div>
+
+            <div class="label">Data:</div>
+            <div class="data">{{ detail.data }}</div>
+
+            {% if detail.file_id %}
+            <div class="label">File Content:</div>
+            <div class="file-content">
+                {% if file_contents[detail.file_id].startswith('Binary file') %}
+                {{ file_contents[detail.file_id] }}
+                <a href="{{ url_for('download', file_id=detail.file_id) }}">Download</a>
+                {% else %}
+                {{ file_contents[detail.file_id] }}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>
