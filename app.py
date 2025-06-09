@@ -42,8 +42,8 @@ lower_credentials=my_db["lower_credentials"]
 ledger=my_db["ledger"]
 
 # Email Configuration
-SENDER_EMAIL = "pchub.secure@gmail.com"
-SENDER_PASSWORD =  "nrpo swmh wbuv dkcr"
+SENDER_EMAIL = "swaroopqis@gmail.com"
+SENDER_PASSWORD =  "qihb sgty ysew ikes"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -896,6 +896,11 @@ def edit_case(id):
         )
         case_data = collection.find_one({'case_number': case_number})
         pdf2=create_case_pdf(case_data)
+        
+        
+        date = datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d')
+        time = datetime.now(timezone("Asia/Kolkata")).strftime('%H:%M')
+        ledger.insert_one({"Date":f"{date}","Time":f"{time}","Data":f"{id} updated the case number {case_number} "} )
 
          # Send Email
         subject = f"Case Details for Case Number {case_number}"
